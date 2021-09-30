@@ -12,6 +12,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".appveyor", ".appveyor", "{
 		..\appveyor.yml = ..\appveyor.yml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmark", "Benchmark\Benchmark.csproj", "{0ECF9B80-15BD-4327-8FAE-AC1606A1A01F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -46,6 +48,18 @@ Global
 		{C5E56CE1-4CF1-4A23-9F8C-D52372D1384A}.Release|x64.Build.0 = Release|Any CPU
 		{C5E56CE1-4CF1-4A23-9F8C-D52372D1384A}.Release|x86.ActiveCfg = Release|Any CPU
 		{C5E56CE1-4CF1-4A23-9F8C-D52372D1384A}.Release|x86.Build.0 = Release|Any CPU
+		{0ECF9B80-15BD-4327-8FAE-AC1606A1A01F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0ECF9B80-15BD-4327-8FAE-AC1606A1A01F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0ECF9B80-15BD-4327-8FAE-AC1606A1A01F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{0ECF9B80-15BD-4327-8FAE-AC1606A1A01F}.Debug|x64.Build.0 = Debug|Any CPU
+		{0ECF9B80-15BD-4327-8FAE-AC1606A1A01F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0ECF9B80-15BD-4327-8FAE-AC1606A1A01F}.Debug|x86.Build.0 = Debug|Any CPU
+		{0ECF9B80-15BD-4327-8FAE-AC1606A1A01F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0ECF9B80-15BD-4327-8FAE-AC1606A1A01F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0ECF9B80-15BD-4327-8FAE-AC1606A1A01F}.Release|x64.ActiveCfg = Release|Any CPU
+		{0ECF9B80-15BD-4327-8FAE-AC1606A1A01F}.Release|x64.Build.0 = Release|Any CPU
+		{0ECF9B80-15BD-4327-8FAE-AC1606A1A01F}.Release|x86.ActiveCfg = Release|Any CPU
+		{0ECF9B80-15BD-4327-8FAE-AC1606A1A01F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
