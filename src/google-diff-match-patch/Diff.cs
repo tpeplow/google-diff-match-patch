@@ -7,18 +7,26 @@ namespace DiffMatchPatch
     public struct Diff
     {
         internal static Diff Create(Operation operation, string text) => new Diff(operation, text);
+        internal static Diff Create(Operation operation, ReadOnlyMemory<char> text) => new Diff(operation, text);
 
         internal static Diff Equal(string text) => Create(Operation.Equal, text);
+        internal static Diff Equal(ReadOnlyMemory<char> text) => Create(Operation.Equal, text);
 
         internal static Diff Insert(string text) => Create(Operation.Insert, text);
+        internal static Diff Insert(ReadOnlyMemory<char> text) => Create(Operation.Insert, text);
 
         internal static Diff Delete(string text) => Create(Operation.Delete, text);
+        internal static Diff Delete(ReadOnlyMemory<char> text) => Create(Operation.Delete, text);
 
         // One of: INSERT, DELETE or EQUAL.
         public Operation Operation { get; }
 
+        public string Text => StringText ?? ReadonlyMemoryText.ToString();
+        
         // The text associated with this diff operation.
-        public string Text { get; }
+        public string StringText { get; }
+        
+        public ReadOnlyMemory<char> ReadonlyMemoryText { get; }
 
         public string FormattedText => Text.Replace("\r\n", "\n").Replace("\n", "\u00b6\n").Replace("\t", "\u00BB").Replace(" ", "\u00B7");
 
@@ -28,7 +36,15 @@ namespace DiffMatchPatch
         {
             // Construct a diff with the specified operation and text.
             Operation = operation;
-            Text = text;
+            StringText = text;
+            ReadonlyMemoryText = null;
+        }
+
+        private Diff(Operation operation, ReadOnlyMemory<char> readonlyMemoryText)
+        {
+            Operation = operation;
+            StringText = null;
+            ReadonlyMemoryText = readonlyMemoryText;
         }
 
         /// <summary>
@@ -79,6 +95,6 @@ namespace DiffMatchPatch
         }
 
         public static List<Diff> Compute(string text1, string text2, bool checkLines, CancellationToken token, bool optimizeForSpeed)
-            => DiffAlgorithm.Compute(text1, text2, checkLines, token, optimizeForSpeed);
+            => DiffAlgorithm.Compute(text1.AsMemory(), text2.AsMemory(), checkLines, token, optimizeForSpeed);
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.IO.Compression;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -6,6 +7,11 @@ namespace DiffMatchPatch
 {
     internal static class TextUtil
     {
+        internal static int CommonPrefix(string text1, string text2, int i1 = 0, int i2 = 0)
+        {
+            return CommonPrefix(text1.AsSpan(), text2.AsSpan(), i1, i2);
+        }
+        
         /// <summary>
         /// Determine the common prefix of two strings as the number of characters common to the start of each string.
         /// </summary>
@@ -14,7 +20,7 @@ namespace DiffMatchPatch
         /// <param name="i1">start index of substring in text1</param>
         /// <param name="i2">start index of substring in text2</param>
         /// <returns>The number of characters common to the start of each string.</returns>
-        internal static int CommonPrefix(string text1, string text2, int i1 = 0, int i2 = 0)
+        internal static int CommonPrefix(ReadOnlySpan<char> text1, ReadOnlySpan<char> text2, int i1 = 0, int i2 = 0)
         {
             var l1 = text1.Length - i1;
             var l2 = text2.Length - i2;
@@ -44,6 +50,11 @@ namespace DiffMatchPatch
             return n;
         }
 
+        internal static int CommonSuffix(string text1, string text2, int? l1 = null, int? l2 = null)
+        {
+            return CommonSuffix(text1.AsSpan(), text2.AsSpan(), l1, l2);
+        }
+        
         /// <summary>
         /// Determine the common suffix of two strings as the number of characters common to the end of each string.
         /// </summary>
@@ -52,7 +63,7 @@ namespace DiffMatchPatch
         /// <param name="l1">maximum length to consider for text1</param>
         /// <param name="l2">maximum length to consider for text2</param>
         /// <returns>The number of characters common to the end of each string.</returns>
-        internal static int CommonSuffix(string text1, string text2, int? l1 = null, int? l2 = null)
+        internal static int CommonSuffix(ReadOnlySpan<char> text1, ReadOnlySpan<char> text2, int? l1 = null, int? l2 = null)
         {
             // Performance analysis: http://neil.fraser.name/news/2007/10/09/
             var text1Length = l1 ?? text1.Length;
@@ -178,15 +189,6 @@ namespace DiffMatchPatch
                 : HalfMatchResult.Empty;
         }
 
-        /// <summary>
-        /// Do the two texts share a Substring which is at least half the length of
-        /// the longer text?
-        /// This speedup can produce non-minimal Diffs.
-        /// </summary>
-        /// <param name="text1"></param>
-        /// <param name="text2"></param>
-        /// <returns>Data structure containing the prefix and suffix of string1,
-        /// the prefix and suffix of string 2, and the common middle. Null if there was no match.</returns>
         internal static HalfMatchResult HalfMatch(string text1, string text2)
         {
             var longtext = text1.Length > text2.Length ? text1 : text2;
@@ -213,6 +215,20 @@ namespace DiffMatchPatch
                 hm = hm1 > hm2 ? hm1 : hm2;
 
             return text1.Length > text2.Length ? hm : hm.Reverse();
+        }
+        
+        /// <summary>
+        /// Do the two texts share a Substring which is at least half the length of
+        /// the longer text?
+        /// This speedup can produce non-minimal Diffs.
+        /// </summary>
+        /// <param name="text1"></param>
+        /// <param name="text2"></param>
+        /// <returns>Data structure containing the prefix and suffix of string1,
+        /// the prefix and suffix of string 2, and the common middle. Null if there was no match.</returns>
+        internal static HalfMatchResult HalfMatch(ReadOnlyMemory<char> text1, ReadOnlyMemory<char> text2)
+        {
+            throw new NotImplementedException("todo");
         }
 
         private static Regex HEXCODE = new Regex("%[0-9A-F][0-9A-F]");

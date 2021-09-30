@@ -1,3 +1,4 @@
+using System;
 using DiffMatchPatch;
 using NUnit.Framework;
 using System.Collections.Generic;
@@ -119,7 +120,7 @@ namespace DiffMatchPatchTests
                 Diff.Delete("t"),
                 Diff.Insert("p")
             };
-            CollectionAssert.AreEqual(diffs, DiffAlgorithm.MyersDiffBisect(a, b, new CancellationToken(), false));
+            CollectionAssert.AreEqual(diffs, DiffAlgorithm.MyersDiffBisect(a.AsMemory(), b.AsMemory(), new CancellationToken(), false));
         }
 
         [Test]
@@ -129,7 +130,7 @@ namespace DiffMatchPatchTests
             var b = "map";
 
             var diffs = new List<Diff> { Diff.Delete("cat"), Diff.Insert("map") };
-            CollectionAssert.AreEqual(diffs, DiffAlgorithm.MyersDiffBisect(a, b, new CancellationToken(true), true));
+            CollectionAssert.AreEqual(diffs, DiffAlgorithm.MyersDiffBisect(a.AsMemory(), b.AsMemory(), new CancellationToken(true), true));
         }
     }
 }
