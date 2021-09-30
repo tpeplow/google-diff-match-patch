@@ -24,21 +24,9 @@ namespace Benchmark
         }
         
         [Benchmark]
-        public void CheckLines_True_SpeedOptimize_False()
-        {
-            var difflist = Diff.Compute(_file1, _file2, true, CancellationToken.None, false);
-        }
-        
-        [Benchmark]
         public void CheckLines_False_SpeedOptimize_True()
         {
             var difflist = Diff.Compute(_file1, _file2, false, CancellationToken.None, true);
-        }
-        
-        [Benchmark]
-        public void CheckLines_False_SpeedOptimize_False()
-        {
-            var difflist = Diff.Compute(_file1, _file2, false, CancellationToken.None, false);
         }
     }
 }
