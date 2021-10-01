@@ -120,13 +120,13 @@ namespace DiffMatchPatch
             if (optimizeForSpeed)
             {
                 // Check to see if the problem can be split in two.
-                var result = TextUtil.HalfMatch(text1.ToString(), text2.ToString());
+                var result = TextUtil.HalfMatch(text1, text2);
                 if (!result.IsEmpty)
                 {
                     // A half-match was found, sort out the return data.
                     // Send both pairs off for separate processing.
-                    var diffsA = Compute(result.Prefix1.AsMemory(), result.Prefix2.AsMemory(), checklines, token, optimizeForSpeed);
-                    var diffsB = Compute(result.Suffix1.AsMemory(), result.Suffix2.AsMemory(), checklines, token, optimizeForSpeed);
+                    var diffsA = Compute(result.Prefix1, result.Prefix2, checklines, token, optimizeForSpeed);
+                    var diffsB = Compute(result.Suffix1, result.Suffix2, checklines, token, optimizeForSpeed);
 
                     // Merge the results.
                     diffs = diffsA;

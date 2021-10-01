@@ -4,13 +4,13 @@ namespace DiffMatchPatch
 {
     internal struct HalfMatchResult : IEquatable<HalfMatchResult>
     {
-        public HalfMatchResult(string prefix1, string suffix1, string prefix2, string suffix2, string commonMiddle)
+        public HalfMatchResult(ReadOnlyMemory<char> prefix1, ReadOnlyMemory<char> suffix1, ReadOnlyMemory<char> prefix2, ReadOnlyMemory<char> suffix2, ReadOnlyMemory<char> commonMiddle)
         {
-            Prefix1 = prefix1 ?? throw new ArgumentNullException(nameof(prefix1));
-            Suffix1 = suffix1 ?? throw new ArgumentNullException(nameof(suffix1));
-            Prefix2 = prefix2 ?? throw new ArgumentNullException(nameof(prefix2));
-            Suffix2 = suffix2 ?? throw new ArgumentNullException(nameof(suffix2));
-            CommonMiddle = commonMiddle ?? throw new ArgumentNullException(nameof(commonMiddle));
+            Prefix1 = prefix1;
+            Suffix1 = suffix1;
+            Prefix2 = prefix2;
+            Suffix2 = suffix2;
+            CommonMiddle = commonMiddle;
         }
 
         public HalfMatchResult Reverse()
@@ -18,12 +18,12 @@ namespace DiffMatchPatch
             return new HalfMatchResult(Prefix2, Suffix2, Prefix1, Suffix1, CommonMiddle);
         }
 
-        public string Prefix1 { get; }
-        public string Suffix1 { get; }
-        public string CommonMiddle { get; }
-        public string Prefix2 { get; }
-        public string Suffix2 { get; }
-        public bool IsEmpty => string.IsNullOrEmpty(CommonMiddle);
+        public ReadOnlyMemory<char> Prefix1 { get; }
+        public ReadOnlyMemory<char> Suffix1 { get; }
+        public ReadOnlyMemory<char> CommonMiddle { get; }
+        public ReadOnlyMemory<char> Prefix2 { get; }
+        public ReadOnlyMemory<char> Suffix2 { get; }
+        public bool IsEmpty => CommonMiddle.Length == 0;
 
         public static readonly HalfMatchResult Empty = new HalfMatchResult();
 
@@ -36,18 +36,25 @@ namespace DiffMatchPatch
 
         public bool Equals(HalfMatchResult other)
         {
-            return string.Equals(Prefix1, other.Prefix1) && string.Equals(Suffix1, other.Suffix1) && string.Equals(CommonMiddle, other.CommonMiddle) && string.Equals(Prefix2, other.Prefix2) && string.Equals(Suffix2, other.Suffix2);
+            return Prefix1.Span.SequenceEqual(other.Prefix1.Span) 
+                   && Suffix1.Span.SequenceEqual(other.Suffix1.Span) 
+                   && CommonMiddle.Span.SequenceEqual(other.CommonMiddle.Span) 
+                   && Prefix2.Span.SequenceEqual(other.Prefix2.Span) 
+                   && Suffix2.Span.SequenceEqual(other.Suffix2.Span);
         }
-
+        
         public override int GetHashCode()
         {
+            // if this is to be supported it needs to use a hash code function that works on the contents
+            // not the memory address
+            throw new NotImplementedException("todo");
             unchecked
             {
-                var hashCode = (Prefix1 != null ? Prefix1.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Suffix1 != null ? Suffix1.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (CommonMiddle != null ? CommonMiddle.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Prefix2 != null ? Prefix2.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Suffix2 != null ? Suffix2.GetHashCode() : 0);
+                var hashCode = Prefix1.GetHashCode();
+                hashCode = (hashCode * 397) ^ Suffix1.GetHashCode();
+                hashCode = (hashCode * 397) ^ CommonMiddle.GetHashCode();
+                hashCode = (hashCode * 397) ^ Prefix2.GetHashCode();
+                hashCode = (hashCode * 397) ^ Suffix2.GetHashCode();
                 return hashCode;
             }
         }

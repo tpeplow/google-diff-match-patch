@@ -1,4 +1,3 @@
-using DiffMatchPatch;
 using NUnit.Framework;
 using System;
 
@@ -10,14 +9,14 @@ namespace DiffMatchPatchTests
         [Test]
         public void WhenLeftIsEmptyReturnsEmpty()
         {
-            var result = TextUtil.HalfMatch("", "12345");
+            var result = TextUtilWrapper.HalfMatch("", "12345");
             Assert.IsTrue(result.IsEmpty);
         }
 
         [Test]
         public void WhenRightIsEmptyReturnsEmpty()
         {
-            var result = TextUtil.HalfMatch("12345", "");
+            var result = TextUtilWrapper.HalfMatch("12345", "");
             Assert.IsTrue(result.IsEmpty);
         }
 
@@ -25,64 +24,64 @@ namespace DiffMatchPatchTests
         public void WhenTextDoesNotMatchReturnsNull()
         {
             // No match.
-            var result = TextUtil.HalfMatch("1234567890", "abcdef");
+            var result = TextUtilWrapper.HalfMatch("1234567890", "abcdef");
             Assert.IsTrue(result.IsEmpty);
         }
 
         [Test]
         public void WhenSubstringIsLessThanHalfTheOriginalStringReturnsNull()
         {
-            var result = TextUtil.HalfMatch("12345", "23");
+            var result = TextUtilWrapper.HalfMatch("12345", "23");
             Assert.IsTrue(result.IsEmpty);
         }
 
         [Test]
         public void WhenSubstringIsMoreThanHalfTheOriginalStringReturnsResult1()
         {
-            var result = TextUtil.HalfMatch("1234567890", "a345678z");
-            Assert.AreEqual(new HalfMatchResult("12", "90", "a", "z", "345678"), result);
+            var result = TextUtilWrapper.HalfMatch("1234567890", "a345678z");
+            Assert.AreEqual(TextUtilWrapper.CreateHalfMatchResult("12", "90", "a", "z", "345678"), result);
         }
 
         [Test]
         public void WhenSubstringIsMoreThanHalfTheOriginalStringReturnsResult2()
         {
-            var result = TextUtil.HalfMatch("a345678z", "1234567890");
-            Assert.AreEqual(new HalfMatchResult("a", "z", "12", "90", "345678"), result);
+            var result = TextUtilWrapper.HalfMatch("a345678z", "1234567890");
+            Assert.AreEqual(TextUtilWrapper.CreateHalfMatchResult("a", "z", "12", "90", "345678"), result);
         }
 
         [Test]
         public void WhenSubstringIsMoreThanHalfTheOriginalStringReturnsResult3()
         {
-            var result = TextUtil.HalfMatch("abc56789z", "1234567890");
-            Assert.AreEqual(new HalfMatchResult("abc", "z", "1234", "0", "56789"), result);
+            var result = TextUtilWrapper.HalfMatch("abc56789z", "1234567890");
+            Assert.AreEqual(TextUtilWrapper.CreateHalfMatchResult("abc", "z", "1234", "0", "56789"), result);
         }
 
         [Test]
         public void WhenSubstringIsMoreThanHalfTheOriginalStringReturnsResult4()
         {
-            var result = TextUtil.HalfMatch("a23456xyz", "1234567890");
-            Assert.AreEqual(new HalfMatchResult("a", "xyz", "1", "7890", "23456"), result);
+            var result = TextUtilWrapper.HalfMatch("a23456xyz", "1234567890");
+            Assert.AreEqual(TextUtilWrapper.CreateHalfMatchResult("a", "xyz", "1", "7890", "23456"), result);
         }
 
         [Test]
         public void WhenSubstringIsMoreThanHalfTheOriginalStringMultipleMatchesReturnsLongestSubstring1()
         {
-            var result = TextUtil.HalfMatch("121231234123451234123121", "a1234123451234z");
-            Assert.AreEqual(new HalfMatchResult("12123", "123121", "a", "z", "1234123451234"), result);
+            var result = TextUtilWrapper.HalfMatch("121231234123451234123121", "a1234123451234z");
+            Assert.AreEqual(TextUtilWrapper.CreateHalfMatchResult("12123", "123121", "a", "z", "1234123451234"), result);
         }
 
         [Test]
         public void WhenSubstringIsMoreThanHalfTheOriginalStringMultipleMatchesReturnsLongestSubstring2()
         {
-            var result = TextUtil.HalfMatch("x-=-=-=-=-=-=-=-=-=-=-=-=", "xx-=-=-=-=-=-=-=");
-            Assert.AreEqual(new HalfMatchResult("", "-=-=-=-=-=", "x", "", "x-=-=-=-=-=-=-="), result);
+            var result = TextUtilWrapper.HalfMatch("x-=-=-=-=-=-=-=-=-=-=-=-=", "xx-=-=-=-=-=-=-=");
+            Assert.AreEqual(TextUtilWrapper.CreateHalfMatchResult("", "-=-=-=-=-=", "x", "", "x-=-=-=-=-=-=-="), result);
         }
 
         [Test]
         public void WhenSubstringIsMoreThanHalfTheOriginalStringMultipleMatchesReturnsLongestSubstring3()
         {
-            var result = TextUtil.HalfMatch("-=-=-=-=-=-=-=-=-=-=-=-=y", "-=-=-=-=-=-=-=yy");
-            Assert.AreEqual(new HalfMatchResult("-=-=-=-=-=", "", "", "y", "-=-=-=-=-=-=-=y"), result);
+            var result = TextUtilWrapper.HalfMatch("-=-=-=-=-=-=-=-=-=-=-=-=y", "-=-=-=-=-=-=-=yy");
+            Assert.AreEqual(TextUtilWrapper.CreateHalfMatchResult("-=-=-=-=-=", "", "", "y", "-=-=-=-=-=-=-=y"), result);
         }
 
         [Test]
@@ -90,8 +89,8 @@ namespace DiffMatchPatchTests
         {
             // Non-optimal halfmatch.
             // Optimal diff would be -q+x=H-i+e=lloHe+Hu=llo-Hew+y not -qHillo+x=HelloHe-w+Hulloy
-            var result = TextUtil.HalfMatch("qHilloHelloHew", "xHelloHeHulloy");
-            Assert.AreEqual(new HalfMatchResult("qHillo", "w", "x", "Hulloy", "HelloHe"), result);
+            var result = TextUtilWrapper.HalfMatch("qHilloHelloHew", "xHelloHeHulloy");
+            Assert.AreEqual(TextUtilWrapper.CreateHalfMatchResult("qHillo", "w", "x", "Hulloy", "HelloHe"), result);
         }
 
         [Test]

@@ -1,5 +1,4 @@
 using System;
-using System.IO.Compression;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -161,27 +160,37 @@ namespace DiffMatchPatch
         /// <param name="shorttext">Shorter string.</param>
         /// <param name="i">Start index of quarter length Substring within longtext.</param>
         /// <returns></returns>
-        private static HalfMatchResult HalfMatchI(string longtext, string shorttext, int i)
+        private static HalfMatchResult HalfMatchI(ReadOnlyMemory<char> longtext, ReadOnlyMemory<char> shorttext, int i)
         {
             // Start with a 1/4 length Substring at position i as a seed.
-            var seed = longtext.Substring(i, longtext.Length / 4);
+            var seed = longtext.Slice(i, longtext.Length / 4).Span;
             var j = -1;
+            var indexOfSeedInShortText =-1;
 
-            var bestCommon = string.Empty;
-            string bestLongtextA = string.Empty, bestLongtextB = string.Empty;
-            string bestShorttextA = string.Empty, bestShorttextB = string.Empty;
+            var bestCommon = ReadOnlyMemory<char>.Empty;
+            var bestLongtextA = ReadOnlyMemory<char>.Empty;
+            var bestLongtextB = ReadOnlyMemory<char>.Empty;
+            var bestShorttextA = ReadOnlyMemory<char>.Empty;
+            var bestShorttextB = ReadOnlyMemory<char>.Empty;
 
-            while (j < shorttext.Length && (j = shorttext.IndexOf(seed, j + 1, StringComparison.Ordinal)) != -1)
+            while (j < shorttext.Length && (indexOfSeedInShortText = shorttext.Slice(j + 1).Span.IndexOf(seed, StringComparison.Ordinal)) != -1)
             {
-                var prefixLength = CommonPrefix(longtext, shorttext, i, j);
-                var suffixLength = CommonSuffix(longtext, shorttext, i, j);
+                j = indexOfSeedInShortText + j + 1;
+                var prefixLength = CommonPrefix(longtext.Span, shorttext.Span, i, j);
+                var suffixLength = CommonSuffix(longtext.Span, shorttext.Span, i, j);
                 if (bestCommon.Length < suffixLength + prefixLength)
                 {
-                    bestCommon = shorttext.Substring(j - suffixLength, suffixLength) + shorttext.Substring(j, prefixLength);
-                    bestLongtextA = longtext.Substring(0, i - suffixLength);
-                    bestLongtextB = longtext.Substring(i + prefixLength);
-                    bestShorttextA = shorttext.Substring(0, j - suffixLength);
-                    bestShorttextB = shorttext.Substring(j + prefixLength);
+                    var startBestCommon = shorttext.Slice(j - suffixLength, suffixLength);
+                    var endNextCommon = shorttext.Slice(j, prefixLength);
+                    var bestCommonCharArray = new char[startBestCommon.Length + endNextCommon.Length];
+                    startBestCommon.CopyTo(bestCommonCharArray);
+                    Array.Copy(endNextCommon.ToArray(), 0, bestCommonCharArray, startBestCommon.Length, endNextCommon.Length);
+                    
+                    bestCommon = new ReadOnlyMemory<char>(bestCommonCharArray);
+                    bestLongtextA = longtext.Slice(0, i - suffixLength);
+                    bestLongtextB = longtext.Slice(i + prefixLength);
+                    bestShorttextA = shorttext.Slice(0, j - suffixLength);
+                    bestShorttextB = shorttext.Slice(j + prefixLength);
                 }
             }
             return bestCommon.Length * 2 >= longtext.Length
@@ -189,7 +198,7 @@ namespace DiffMatchPatch
                 : HalfMatchResult.Empty;
         }
 
-        internal static HalfMatchResult HalfMatch(string text1, string text2)
+        internal static HalfMatchResult HalfMatch(ReadOnlyMemory<char> text1, ReadOnlyMemory<char> text2)
         {
             var longtext = text1.Length > text2.Length ? text1 : text2;
             var shorttext = text1.Length > text2.Length ? text2 : text1;
@@ -217,20 +226,6 @@ namespace DiffMatchPatch
             return text1.Length > text2.Length ? hm : hm.Reverse();
         }
         
-        /// <summary>
-        /// Do the two texts share a Substring which is at least half the length of
-        /// the longer text?
-        /// This speedup can produce non-minimal Diffs.
-        /// </summary>
-        /// <param name="text1"></param>
-        /// <param name="text2"></param>
-        /// <returns>Data structure containing the prefix and suffix of string1,
-        /// the prefix and suffix of string 2, and the common middle. Null if there was no match.</returns>
-        internal static HalfMatchResult HalfMatch(ReadOnlyMemory<char> text1, ReadOnlyMemory<char> text2)
-        {
-            throw new NotImplementedException("todo");
-        }
-
         private static Regex HEXCODE = new Regex("%[0-9A-F][0-9A-F]");
 
         /// <summary>
