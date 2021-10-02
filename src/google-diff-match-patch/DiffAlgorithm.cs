@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -228,8 +229,15 @@ namespace DiffMatchPatch
             var maxD = (text1Length + text2Length + 1) / 2;
             var vOffset = maxD;
             var vLength = 2 * maxD;
-            var v1 = new int[vLength];
-            var v2 = new int[vLength];
+            var v1 = ArrayPool<int>.Shared.Rent(vLength);
+            var v2 = ArrayPool<int>.Shared.Rent(vLength);
+
+            void ReturnRentedArrays()
+            {
+                ArrayPool<int>.Shared.Return(v1);
+                ArrayPool<int>.Shared.Return(v2);
+            }
+            
             for (var x = 0; x < vLength; x++)
             {
                 v1[x] = -1;
@@ -298,6 +306,7 @@ namespace DiffMatchPatch
                             var x2 = text1Length - v2[k2Offset];
                             if (x1 >= x2)
                             {
+                                ReturnRentedArrays();
                                 // Overlap detected.
                                 return BisectSplit(text1, text2, x1, y1, token, optimizeForSpeed);
                             }
@@ -348,6 +357,7 @@ namespace DiffMatchPatch
                             x2 = text1Length - v2[k2Offset];
                             if (x1 >= x2)
                             {
+                                ReturnRentedArrays();
                                 // Overlap detected.
                                 return BisectSplit(text1, text2, x1, y1, token, optimizeForSpeed);
                             }
@@ -355,6 +365,8 @@ namespace DiffMatchPatch
                     }
                 }
             }
+
+            ReturnRentedArrays();
             // Diff took too long and hit the deadline or
             // number of Diffs equals number of characters, no commonality at all.
             var diffs = new List<Diff> { Diff.Delete(text1), Diff.Insert(text2) };
