@@ -158,9 +158,13 @@ namespace DiffMatchPatch
             var compressor = new LineToCharCompressor();
             text1 = compressor.Compress(text1, char.MaxValue * 2 / 3);
             text2 = compressor.Compress(text2, char.MaxValue);
-            var diffs = Compute(text1.AsMemory(), text2.AsMemory(), false, token, optimizeForSpeed)
-                .Select(diff => diff.Replace(compressor.Decompress(diff.Text)))
-                .ToList();
+            
+            var diffs = Compute(text1.AsMemory(), text2.AsMemory(), false, token, optimizeForSpeed);
+            for (var i = 0; i < diffs.Count; i++)
+            {
+                var diff = diffs[i];
+                diffs[i] = diff.Replace(compressor.Decompress(diff.Text));
+            }
 
             // Eliminate freak matches (e.g. blank lines)
             diffs.CleanupSemantic();
