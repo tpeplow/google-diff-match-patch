@@ -313,7 +313,7 @@ namespace DiffMatchPatch
         /// Any edit section can move as long as it doesn't cross an equality.
         /// </summary>
         /// <param name="diffs">list of Diffs</param>
-        internal static void CleanupMerge(this List<Diff> diffs)
+        internal static void CleanupMerge(this IList<Diff> diffs)
         {
             // Add a dummy entry at the end.
             diffs.Add(Diff.Equal(string.Empty));
@@ -450,7 +450,7 @@ namespace DiffMatchPatch
         /// e.g: The c<ins>at c</ins>ame. -> The <ins>cat </ins>came.
         /// </summary>
         /// <param name="diffs"></param>
-        internal static void CleanupSemanticLossless(this List<Diff> diffs)
+        internal static void CleanupSemanticLossless(this IList<Diff> diffs)
         {
             var pointer = 1;
             // Intentionally ignore the first and last element (don't need checking).
@@ -695,7 +695,7 @@ namespace DiffMatchPatch
         /// Reduce the number of edits by eliminating semantically trivial equalities.
         /// </summary>
         /// <param name="diffs"></param>
-        public static void CleanupSemantic(this List<Diff> diffs)
+        public static void CleanupSemantic(this IList<Diff> diffs)
         {
             // Stack of indices where equalities are found.
             var equalities = new Stack<int>();

@@ -7,6 +7,8 @@ namespace DiffMatchPatch
     internal static class ListTailSegment
     {
         public static ListTailSegment<T> ToTailSegment<T>(this List<T> list, int startAt) => new ListTailSegment<T>(list, startAt);
+
+        public static ListTailSegment<T> ToTailSegment<T>(this List<T> list) => list.ToTailSegment(list.Count);
     }
 
     internal class ListTailSegment<T> : IList<T>
@@ -30,6 +32,11 @@ namespace DiffMatchPatch
         public void Add(T item)
         {
             _list.Add(item);
+        }
+
+        public void AddRange(IEnumerable<T> collection)
+        {
+            _list.AddRange(collection);
         }
 
         public void Clear()

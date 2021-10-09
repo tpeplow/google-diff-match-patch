@@ -19,13 +19,14 @@
  * http://code.google.com/p/google-diff-match-patch/
  */
 
+using System;
 using System.Collections.Generic;
 
 namespace DiffMatchPatch
 {
     internal static class Extensions
     {
-        internal static void Splice<T>(this List<T> input, int start, int count, params T[] objects)
+        internal static void Splice<T>(this IList<T> input, int start, int count, params T[] objects)
             => input.Splice(start, count, (IEnumerable<T>)objects);
 
         /// <summary>
@@ -36,10 +37,25 @@ namespace DiffMatchPatch
         /// <param name="start"></param>
         /// <param name="count"></param>
         /// <param name="objects"></param>
-        internal static void Splice<T>(this List<T> input, int start, int count, IEnumerable<T> objects)
+        internal static void Splice<T>(this IList<T> input, int start, int count, IEnumerable<T> objects)
         {
-            input.RemoveRange(start, count);
-            input.InsertRange(start, objects);
+            if (input is List<T> list)
+            {
+                list.RemoveRange(start, count);
+                list.InsertRange(start, objects);
+
+                return;
+            }
+
+            if (input is ListTailSegment<T> tailSegment)
+            {
+                tailSegment.RemoveRange(start, count);
+                tailSegment.InsertRange(start, objects);
+
+                return;
+            }
+
+            throw new NotImplementedException("todo cleanup this code");
         }
     }
 }
