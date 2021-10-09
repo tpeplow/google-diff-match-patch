@@ -8,6 +8,8 @@ namespace DiffMatchPatch
 {
     internal class DiffAlgorithmInstance
     {
+        public List<Diff> Diffs { get; } = new List<Diff>();
+        
         /// <summary>
         /// Find the differences between two texts.  Simplifies the problem by
         /// stripping any common prefix or suffix off the texts before diffing.
@@ -18,20 +20,19 @@ namespace DiffMatchPatch
         /// <param name="token">Cancellation token for cooperative cancellation</param>
         /// <param name="optimizeForSpeed">Should optimizations be enabled?</param>
         /// <returns></returns>
-        public List<Diff> Compute(ReadOnlyMemory<char> text1, ReadOnlyMemory<char> text2, bool checklines, CancellationToken token, bool optimizeForSpeed)
+        public ListTailSegment<Diff> Compute(ReadOnlyMemory<char> text1, ReadOnlyMemory<char> text2, bool checklines, CancellationToken token, bool optimizeForSpeed)
         {
+            var diffs = Diffs.ToTailSegment();
             if (text1.Length == text2.Length && text1.Length == 0)
-                return new List<Diff>();
+                return diffs;
 
             var commonlength = TextUtil.CommonPrefix(text1.Span, text2.Span);
 
             if (commonlength == text1.Length && commonlength == text2.Length)
             {
                 // equal
-                return new List<Diff>()
-                {
-                    Diff.Equal(text1)
-                };
+                diffs.Add(Diff.Equal(text1));
+                return diffs;
             }
 
             // Trim off common prefix (speedup).
@@ -46,7 +47,7 @@ namespace DiffMatchPatch
             text2 = text2.Slice(0, text2.Length - commonlength);
 
             // Compute the diff on the middle block.
-            var diffs = ComputeImpl(text1, text2, checklines, token, optimizeForSpeed);
+            diffs = ComputeImpl(text1, text2, checklines, token, optimizeForSpeed);
 
             // Restore the prefix and suffix.
             if (commonprefix.Length != 0)
@@ -72,12 +73,12 @@ namespace DiffMatchPatch
         /// <param name="token">Cancellation token for cooperative cancellation</param>
         /// <param name="optimizeForSpeed">Should optimizations be enabled?</param>
         /// <returns></returns>
-        private List<Diff> ComputeImpl(
+        private ListTailSegment<Diff> ComputeImpl(
             ReadOnlyMemory<char> text1,
             ReadOnlyMemory<char> text2,
             bool checklines, CancellationToken token, bool optimizeForSpeed)
         {
-            var diffs = new List<Diff>();
+            var diffs = Diffs.ToTailSegment();
 
             if (text1.Length == 0)
             {
@@ -124,13 +125,10 @@ namespace DiffMatchPatch
                 {
                     // A half-match was found, sort out the return data.
                     // Send both pairs off for separate processing.
-                    var diffsA = Compute(result.Prefix1, result.Prefix2, checklines, token, optimizeForSpeed);
-                    var diffsB = Compute(result.Suffix1, result.Suffix2, checklines, token, optimizeForSpeed);
-
-                    // Merge the results.
-                    diffs = diffsA;
+                    diffs = Compute(result.Prefix1, result.Prefix2, checklines, token, optimizeForSpeed);
                     diffs.Add(Diff.Equal(result.CommonMiddle));
-                    diffs.AddRange(diffsB);
+                    Compute(result.Suffix1, result.Suffix2, checklines, token, optimizeForSpeed);
+
                     return diffs;
                 }
             }
@@ -151,7 +149,7 @@ namespace DiffMatchPatch
         /// <param name="token"></param>
         /// <param name="optimizeForSpeed"></param>
         /// <returns></returns>
-        private List<Diff> LineDiff(string text1, string text2, CancellationToken token, bool optimizeForSpeed)
+        private ListTailSegment<Diff> LineDiff(string text1, string text2, CancellationToken token, bool optimizeForSpeed)
         {
             // Scan the text on a line-by-line basis first.
             var compressor = new LineToCharCompressor();
@@ -197,7 +195,7 @@ namespace DiffMatchPatch
                             // todo
                             
                             // Delete the offending records and add the merged ones.
-                            var diffsWithinLine = Compute(deleteBuilder.ToString().AsMemory(), insertBuilder.ToString().AsMemory(), false, token, optimizeForSpeed);
+                            var diffsWithinLine = new DiffAlgorithmInstance().Compute(deleteBuilder.ToString().AsMemory(), insertBuilder.ToString().AsMemory(), false, token, optimizeForSpeed);
                             var count = countDelete + countInsert;
                             var index = pointer - count;
                             diffs.Splice(index, count, diffsWithinLine);
@@ -226,7 +224,7 @@ namespace DiffMatchPatch
         /// <param name="token"></param>
         /// <param name="optimizeForSpeed"></param>
         /// <returns></returns>
-        internal List<Diff> MyersDiffBisect(ReadOnlyMemory<char> text1, ReadOnlyMemory<char> text2, CancellationToken token, bool optimizeForSpeed)
+        internal ListTailSegment<Diff> MyersDiffBisect(ReadOnlyMemory<char> text1, ReadOnlyMemory<char> text2, CancellationToken token, bool optimizeForSpeed)
         {
             var text1Span = text1.Span;
             var text2Span = text2.Span;
@@ -376,7 +374,9 @@ namespace DiffMatchPatch
             ReturnRentedArrays();
             // Diff took too long and hit the deadline or
             // number of Diffs equals number of characters, no commonality at all.
-            var diffs = new List<Diff> { Diff.Delete(text1), Diff.Insert(text2) };
+            var diffs = Diffs.ToTailSegment();
+            diffs.Add(Diff.Delete(text1));
+            diffs.Add(Diff.Insert(text2));
             return diffs;
         }
 
@@ -391,7 +391,7 @@ namespace DiffMatchPatch
         /// <param name="token"></param>
         /// <param name="optimizeForSpeed"></param>
         /// <returns></returns>
-        private List<Diff> BisectSplit(ReadOnlyMemory<char> text1, ReadOnlyMemory<char> text2, int x, int y, CancellationToken token, bool optimizeForSpeed)
+        private ListTailSegment<Diff> BisectSplit(ReadOnlyMemory<char> text1, ReadOnlyMemory<char> text2, int x, int y, CancellationToken token, bool optimizeForSpeed)
         {
             var text1A = text1.Slice(0, x);
             var text2A = text2.Slice(0, y);
@@ -400,9 +400,8 @@ namespace DiffMatchPatch
 
             // Compute both Diffs serially.
             var diffs = Compute(text1A, text2A, false, token, optimizeForSpeed);
-            var diffsb = Compute(text1B, text2B, false, token, optimizeForSpeed);
+            Compute(text1B, text2B, false, token, optimizeForSpeed);
 
-            diffs.AddRange(diffsb);
             return diffs;
         }
     }
