@@ -8,6 +8,17 @@ namespace DiffMatchPatch
 {
     internal class DiffAlgorithmInstance
     {
+        readonly List<Diff> _childDiffs = new List<Diff>();
+        
+        public DiffAlgorithmInstance()
+        {
+        }
+
+        public DiffAlgorithmInstance(List<Diff> diffs)
+        {
+            Diffs = diffs;
+        }
+        
         public List<Diff> Diffs { get; } = new List<Diff>();
         
         /// <summary>
@@ -195,11 +206,15 @@ namespace DiffMatchPatch
                             // todo
                             
                             // Delete the offending records and add the merged ones.
-                            var diffsWithinLine = new DiffAlgorithmInstance().Compute(deleteBuilder.ToString().AsMemory(), insertBuilder.ToString().AsMemory(), false, token, optimizeForSpeed);
+                            // Create a new DiffAlgorithmInstance to ensure the diffs within the line do not get
+                            // written to the list of diffs.  Reuse a list to save allocating a new list for each line
+                            var diffsWithinLine = new DiffAlgorithmInstance(_childDiffs).Compute(deleteBuilder.ToString().AsMemory(), insertBuilder.ToString().AsMemory(), false, token, optimizeForSpeed);
                             var count = countDelete + countInsert;
                             var index = pointer - count;
                             diffs.Splice(index, count, diffsWithinLine);
                             pointer = index + diffsWithinLine.Count;
+                            // clear the list before moving to the next line
+                            _childDiffs.Clear();
                         }
                         countInsert = 0;
                         countDelete = 0;
